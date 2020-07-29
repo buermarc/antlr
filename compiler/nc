@@ -1,3 +1,0 @@
-entry
-Exception in thread "main" java.lang.Exception: No input file given
-	at compiler.Main.main(Main.java:30)
