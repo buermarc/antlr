@@ -1,0 +1,23 @@
+apply plugin: 'java'
+
+jar { 
+    baseName = 'parser'
+        manifest {
+	        attributes "Main-Class": "com.parser.Main"
+	    }
+	 
+	    from {
+	        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+	    }
+}
+
+repositories {
+    flatDir { 
+        dirs 'libs'
+    } 
+
+    dependencies {
+        implementation name: 'antlr'
+    }
+}
+

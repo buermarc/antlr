@@ -1,0 +1,2 @@
+export CLASSPATH=.:/home/mulc/repos/theoinf-antlr/antlr/parser/libs/antlr.jar:/home/mulc/repos/theoinf-antlr/antlr/parser/libs/parser.jar
+alias grun='java org.antlr.v4.gui.TestRig'

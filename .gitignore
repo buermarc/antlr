@@ -1,0 +1,10 @@
+.gradle
+.project
+.classpath
+.settings
+*.class
+build
+bin
+test
+grammar
+~grammar/Stub.g4
