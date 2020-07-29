@@ -5,6 +5,10 @@ file
     : 
     (functionDecl | varDecl)+ ;
 
+arrayDecl
+    : varType=type identifier=ID '[' count=INT ']' ';'  #ArrayDeclaration
+    ;
+
 varDecl
     : varType=type identifier=ID ('=' expression=expr)? ';' #VarDeclaration
     ;
@@ -28,6 +32,7 @@ block: '{' stat* '}' ;
 
 stat: block                              #ExprBlock
     | varDecl                            #ExprVarDecl
+    | arrayDecl                          #ExprArrayDecl
     | 'if' expression=expr 'then' thenBlock=stat ('else' elseBlock=stat)? #IfElse
     | ret='return' returnE=expr? ';'                #Return
     | left=expr '=' right=expr ';'                 #AssignExpr// assignment on expr

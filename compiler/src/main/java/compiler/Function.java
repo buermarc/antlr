@@ -45,6 +45,7 @@ public class Function {
         if (!f1.name.equals(f2.name))
             return false;
 
+        System.err.println("CHECK FUNCTIONS " + f1.name + " " + f2.name);
         if (f1.name.equals("println"))
             return true;
 

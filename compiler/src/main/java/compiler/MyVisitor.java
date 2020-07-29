@@ -23,6 +23,7 @@ import org.parser.StubParser.FunctionCallContext;
 import org.parser.StubParser.ExprListContext;
 import org.parser.StubParser.IdentifierContext;
 import org.parser.StubParser.IfElseContext;
+import org.parser.StubParser.ArrayDeclarationContext;
 
 import compiler.exceptions.*;
 
@@ -68,6 +69,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitFile(FileContext ctx) {
+
         visitChildren(ctx);
         System.err.println("last out hopefully");
 
@@ -136,10 +138,12 @@ public class MyVisitor extends StubBaseVisitor<String> {
     public String visitFunctionDecl(FunctionDeclContext ctx) {
         System.err.println("into function decl");
 
+        pseudoRegisters.push(0);
         String params = "";
         try { 
             params = visit(ctx.params);
         } catch(Exception e) {}
+        pseudoRegisters.pop();
         String type = visit(ctx.fnType);
 
         returnBoolFound.push(false);
@@ -147,7 +151,11 @@ public class MyVisitor extends StubBaseVisitor<String> {
         block += "define " + type + " @" + ctx.id.getText() +
             "(" + params + ") " + "{\n";
 
+        //Either check or give params other pseudo name convention
+        //if (pseudoRegisters.peek() == 0) {
         pseudoRegisters.push(1);
+        //}
+
         ifElse.push(1);
 
         String blockRet = visit(ctx.bl);
@@ -188,13 +196,30 @@ public class MyVisitor extends StubBaseVisitor<String> {
     @Override
     public String visitFormalParameters(FormalParametersContext ctx) {
         System.err.println("into params");
-        return visitChildren(ctx);
+        int count = ctx.getChildCount();
+
+        String params = "";
+        for (int i = 0; i < count; i=i+2) {
+            params += visit(ctx.getChild(i));
+
+            if (i < count-1)
+                params += ",";
+        }
+        return params;
     }
 
     @Override
     public String visitFormalParameter(FormalParameterContext ctx) {
         System.err.println("into param");
-        return visit(ctx.paramType) + " " + ctx.id.getText();
+        String id = ctx.id.getText();
+        Type type = Type.fromString(visit(ctx.paramType));
+
+        String localPseudoRegisters = "%tmp" + pseudoRegisters.peek();
+        pseudoRegisters.push(pseudoRegisters.pop() + 1);
+
+        pseudoToTypeMap.put(localPseudoRegisters, type);
+        stubVarToPseudoMap.put(id, new VarWrapper(localPseudoRegisters, type));
+        return type.typeName() + " " + localPseudoRegisters;
     }
 
     @Override
@@ -379,6 +404,8 @@ public class MyVisitor extends StubBaseVisitor<String> {
     public String visitFunctionCall(FunctionCallContext ctx) {
         System.err.println("In MyVisitor into visitFunctionCall");
         // Check if called Function is in generated functionList
+
+        Function oldFunction = currentCalledFunction;
         currentCalledFunction = new Function(ctx.id.getText());
         // We have the name but we also need the all parmaters in order to look up id the function is in the list
         // their may are no parameters if the function call after all
@@ -400,6 +427,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
         if (!found) {
             throw new UnknownFunctionException(ctx.id);
         }
+        currentCalledFunction = oldFunction;
 
         String functionName = fn.getName();
         String returnString = fn.getRetType().typeName();
@@ -495,6 +523,11 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         // Check if the parent node in the tree will want a pointer or the real value
         if (ctx.getParent().getClass() != AssignExprContext.class) {
+
+            // if variable comes from formal parameters of a function declaration
+            if (pointerPseudo.contains("tmp"))
+                    return pointerPseudo;
+
             String localPseudoRegisters = "%" + pseudoRegisters.peek();
             pseudoRegisters.push(pseudoRegisters.pop() + 1);
 
@@ -571,6 +604,22 @@ public class MyVisitor extends StubBaseVisitor<String> {
         oldBlock += block;
         block = oldBlock;
         return ""; 
+    }
+
+    @Override 
+    public String visitArrayDeclaration(ArrayDeclarationContext ctx) {
+        Type type = Type.fromString(visit(ctx.varType));
+        String identifier = ctx.identifier.getText();
+        int count = Integer.valueOf(ctx.count.getText());
+
+        String localPseudoRegisters = "%" + pseudoRegisters.peek();
+        pseudoRegisters.push(pseudoRegisters.pop() + 1);
+        pseudoToTypeMap.put(localPseudoRegisters, type);
+        stubVarToPseudoMap.put(identifier, new VarWrapper(localPseudoRegisters, type));
+
+        block += localPseudoRegisters+" = alloca ["+
+            count+" x "+type.typeName()+"]\n";
+        return "";
     }
 
     @Override

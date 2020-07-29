@@ -13,6 +13,22 @@ Bootstraping the project:
     After exiting the sell the container should be killed automaticaly. To make 
     sure it is not runnig use the 'docker container ls' command.
 
+    CENTOS Container:
+    docker build -t antlr:one .  0.45s user 0.42s system 0% cpu 4:22.33 total
+
+    REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+    antlr               one                 ------------        ------------        1.37GB
+    centos              latest              ------------        ------------        215MB
+
+    Arch Container:
+    docker build -t antlr:two .  0.12s user 0.11s system 0% cpu 5:50.85 total
+
+    REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
+    antlr               two                 ------------        ------------         1.86GB
+    archlinux           latest              ------------        ------------         415MB
+
+
+
 Dependencies:
     gradle
     clang
