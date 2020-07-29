@@ -6,4 +6,4 @@ mkdir /opt/gradle -p
 cp -pr gradle-*/* /opt/gradle
 
 echo "export PATH=/opt/gradle/bin:${PATH}" | tee /etc/profile.d/gradle.sh
-sudo chmod +x /etc/profile.d/gradle.sh
+chmod +x /etc/profile.d/gradle.sh
