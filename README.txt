@@ -1,11 +1,11 @@
-docker build -t antlr:one .
-CONT=$(docker run --rm --detach antlr:one)
-docker exec -it $CONT /bin/bash
 Dependencies:
     gradle
     clang
     llvm tool set
     java
+
+    if you use want to bootstrap the project:
+    docker
 
 Structure:
 ├── antlr
