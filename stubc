@@ -1,2 +1,2 @@
 #!/bin/bash
-java -jar /usr/local/compiler.jar $@
+java -jar /usr/local/lib/compiler.jar $@
