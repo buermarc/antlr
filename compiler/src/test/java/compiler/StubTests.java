@@ -140,9 +140,9 @@ public class StubTests {
             generateIrStringForTest(name+".st"); 
         });
         assertEquals("\n" +
-                     "3:14 Tried to assign INT to FLOAT\n"+
-                     ">    float f = i;\n"+
-                     "               ^",
+                     "3:18 Tried to assign INT to FLOAT\n"+
+                     ">    let float f = i;\n"+
+                     "                   ^",
                      e.getMessage());
     }
 
@@ -308,6 +308,14 @@ public class StubTests {
         assertEquals(Integer.valueOf(0), retPair.getKey());
         assertEquals("1\n",
                      retPair.getValue());
+    }
+
+    @Test
+    void testLeftRightAssignment_1() throws Exception {
+        String name = "left_right_assignment_test1";
+        Pair<Integer, String> retPair = StubTests.assertBase(name);
+
+        assertEquals(Integer.valueOf(4), retPair.getKey());
     }
 
     @Test

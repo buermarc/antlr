@@ -4,7 +4,7 @@ MAINTAINER buermarc@googlemail.com
 RUN yum -y update
 RUN yum -y install git java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel llvm-toolset
 RUN mkdir /repos/
-RUN /bin/bash -c 'echo 2i'
+RUN /bin/bash -c 'echo i'
 RUN git clone https://github.com/buermarc/antlr /repos/antlr
 RUN /bin/bash /repos/antlr/gradle_centos.sh
 RUN source /etc/profile.d/gradle.sh

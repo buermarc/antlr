@@ -1,5 +1,5 @@
 void main() {
-    int a = 4;
-    float b = 3.0;
+    let int a = 4;
+    let float b = 3.0;
     return a + b;
 }

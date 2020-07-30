@@ -1,5 +1,5 @@
 void main() {
-    int i = 3;
-    float f = i;
+    let int i = 3;
+    let float f = i;
     return f;
 }

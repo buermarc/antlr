@@ -6,11 +6,11 @@ file
     (functionDecl | varDecl)+ ;
 
 arrayDecl
-    : varType=type identifier=ID '[' count=INT ']' ';'  #ArrayDeclaration
+    : 'let' mutable='mut'? varType=type identifier=ID '[' count=INT ']' ';'  #ArrayDeclaration
     ;
 
 varDecl
-    : varType=type identifier=ID ('=' expression=expr)? ';' #VarDeclaration
+    : 'let' mutable='mut'? varType=type identifier=ID ('=' expression=expr)? ';' #VarDeclaration
     ;
 
 type: type '['']' | 'float' | 'int' | 'void' ; //TODO get rid of void type
@@ -25,7 +25,7 @@ formalParameters
     ;
 
 formalParameter
-    : paramType=type id=ID
+    : mutable='mut'? paramType=type id=ID
     ;
 
 block: '{' stat* '}' ;

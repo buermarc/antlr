@@ -3,7 +3,7 @@ void say_hello() {
 }
 
 int main() {
-    int a;
+    let mut int a;
     a = 2;
     say_hello();
     return a;

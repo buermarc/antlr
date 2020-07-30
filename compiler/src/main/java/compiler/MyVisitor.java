@@ -59,6 +59,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
     HashMap<String, StringWrapper> staticStringMap = new HashMap<>();
 
     int staticStringReferencePart = 1;
+    boolean assignmentLeft = false;
 
     List<Function> functionList;
     Function currentCalledFunction;
@@ -259,11 +260,15 @@ public class MyVisitor extends StubBaseVisitor<String> {
         String id = ctx.id.getText();
         Type type = Type.fromString(visit(ctx.paramType));
 
+        boolean mutable = false;
+        if (ctx.mutable != null)
+            mutable = true;
+
         String localPseudoRegisters = "%tmp" + pseudoRegisters.peek();
         pseudoRegisters.push(pseudoRegisters.pop() + 1);
 
         pseudoToTypeMap.put(localPseudoRegisters, type);
-        stubVarToPseudoMap.put(id, (Object) new VarWrapper(localPseudoRegisters, type));
+        stubVarToPseudoMap.put(id, (Object) new VarWrapper(localPseudoRegisters, type, mutable));
         return type.typeName() + " " + localPseudoRegisters;
     }
 
@@ -406,6 +411,9 @@ public class MyVisitor extends StubBaseVisitor<String> {
             declarationType = pseudoToTypeMap.get(declarationVar);
         } catch(Exception e) {}
 
+        boolean mutable = false;
+        if (ctx.mutable != null)
+            mutable = true;
 
         String id = ctx.identifier.getText();
         Type type = Type.fromString(visit(ctx.varType));
@@ -414,13 +422,14 @@ public class MyVisitor extends StubBaseVisitor<String> {
         pseudoRegisters.push(pseudoRegisters.pop() + 1);
 
         pseudoToTypeMap.put(localPseudoRegisters, type);
-        stubVarToPseudoMap.put(id, (Object) new VarWrapper(localPseudoRegisters, type));
+        stubVarToPseudoMap.put(id, (Object) new VarWrapper(localPseudoRegisters, type, mutable));
         System.err.println("Put "+id+" into stubVarToPseudoMap, resulting in: "+stubVarToPseudoMap);
         //HashMap which maps varName to pseudoRegister but also rembers type, maybe create VarWrapper
         //Initalize a varibel through allocating and if declaration then store 
 
         String initialize = localPseudoRegisters + " = alloca " + type.typeName() + ", align 4\n";
         block += initialize;
+
         if (declarationVar != null) {
             if (!type.name().equals(declarationType.name())) {
                 throw new AssignmentException(declarationType.name(),
@@ -438,7 +447,10 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override 
     public String visitAssignExpr(AssignExprContext ctx) {
+        assignmentLeft = true;
         String left = visit(ctx.left);
+        assignmentLeft = false;
+
         String right = visit(ctx.right);
 
         Type leftType = pseudoToTypeMap.get(left);
@@ -584,7 +596,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
 
         // Check if the parent node in the tree will want a pointer or the real value
-        if (ctx.getParent().getClass() != AssignExprContext.class) {
+        if (ctx.getParent().getClass() != AssignExprContext.class || !assignmentLeft) {
 
             // if variable comes from formal parameters of a function declaration
             if (pointerPseudo.contains("tmp"))
@@ -601,6 +613,8 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
             return localPseudoRegisters;
         }
+        if (!varWrapper.getMutable() && assignmentLeft)
+            throw new NotMutableException(ctx.id);
 
         return pointerPseudo;
     }
@@ -674,12 +688,16 @@ public class MyVisitor extends StubBaseVisitor<String> {
         String identifier = ctx.identifier.getText();
         int count = Integer.valueOf(ctx.count.getText());
 
+        boolean mutable = false;
+        if (ctx.mutable != null)
+            mutable = true;
+
         String localPseudoRegisters = "%array" + arrayPseudoRegisters.peek();
         arrayPseudoRegisters.push(arrayPseudoRegisters.pop() + 1);
         pseudoToTypeMap.put(localPseudoRegisters, type);
 
         stubVarToPseudoMap.put(identifier,
-                (Object) new ArrayWrapper(localPseudoRegisters, count, type));
+                (Object) new ArrayWrapper(localPseudoRegisters, count, mutable, type));
 
         block += localPseudoRegisters+" = alloca ["+
             count+" x "+type.typeName()+"]\n";
@@ -731,6 +749,9 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
             return newlocalPseudoRegisters;
         }
+        if (!stubVar.getMutable() && assignmentLeft)
+            throw new NotMutableException(ctx.array.start);
+
         return localPseudoRegisters; 
     }
 

@@ -3,10 +3,12 @@ package compiler;
 public class VarWrapper {
     String pseudoRegister;
     Type type;
+    boolean mutable;
 
-    public VarWrapper(String pseudoRegister, Type type) {
+    public VarWrapper(String pseudoRegister, Type type, boolean mutable) {
         this.pseudoRegister = pseudoRegister; 
         this.type = type;
+        this.mutable = mutable;
     }
 
     public String getPseudo() {
@@ -23,5 +25,9 @@ public class VarWrapper {
 
     public void setType(Type type) {
         this.type = type;
+    }
+
+    public boolean getMutable() {
+        return this.mutable;
     }
 }
