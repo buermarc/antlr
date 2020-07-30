@@ -126,7 +126,7 @@ public class StubTests {
 
     @Test
     void testUndeclaredVariable() throws Exception {
-        String name = "undeclared_variable_test";
+        String name = "undeclared_variable_test_exc";
         UndeclaredVariableException e = Assertions.assertThrows(UndeclaredVariableException.class, () -> {
             generateIrStringForTest(name+".st"); 
         });
@@ -135,7 +135,7 @@ public class StubTests {
 
     @Test
     void testAssignmentEx_1() throws Exception {
-        String name = "assignment_ex_test1";
+        String name = "assignment_test1_exc";
         AssignmentException e = Assertions.assertThrows(AssignmentException.class, () -> {
             generateIrStringForTest(name+".st"); 
         });
@@ -148,7 +148,7 @@ public class StubTests {
 
     @Test
     void testUndefinedFunction_1() throws Exception {
-        String name = "unknown_function_test1";
+        String name = "unknown_function_test1_exc";
         UnknownFunctionException e = Assertions.assertThrows(UnknownFunctionException.class, () -> {
             generateIrStringForTest(name+".st"); 
         });
@@ -253,7 +253,7 @@ public class StubTests {
 
     @Test
     void testNoReturnException_1() throws Exception {
-        String name = "no_return_exception_test1";
+        String name = "no_return_test1_exc";
         NoReturnException e = Assertions.assertThrows(NoReturnException.class, () -> {
             generateIrStringForTest(name+".st"); 
         });
@@ -266,7 +266,7 @@ public class StubTests {
 
     @Test
     void testNoReturnException_2() throws Exception {
-        String name = "no_return_exception_test2";
+        String name = "no_return_test2_exc";
         NoReturnException e = Assertions.assertThrows(NoReturnException.class, () -> {
             generateIrStringForTest(name+".st"); 
         });
@@ -289,7 +289,7 @@ public class StubTests {
 
     @Test
     void testMultipleReturnException_1() throws Exception {
-        String name = "multiple_return_test2";
+        String name = "multiple_return_test2_exc";
         MultipleReturnException e = Assertions.assertThrows(MultipleReturnException.class, () -> {
             generateIrStringForTest(name+".st"); 
         });
@@ -312,7 +312,7 @@ public class StubTests {
 
     @Test
     void testArray_2() throws Exception {
-        String name = "array_test2";
+        String name = "array_test2_exc";
         ValueIsNoArrayException e = Assertions.assertThrows(ValueIsNoArrayException.class, () -> {
             generateIrStringForTest(name+".st"); 
         });
