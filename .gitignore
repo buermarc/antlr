@@ -4,7 +4,7 @@
 .settings
 *.class
 build
+./test/
 bin
-test
 grammar
 ~grammar/Stub.g4

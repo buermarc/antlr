@@ -16,6 +16,13 @@ public interface StubVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitFile(StubParser.FileContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ArrayDeclaration}
+	 * labeled alternative in {@link StubParser#arrayDecl}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayDeclaration(StubParser.ArrayDeclarationContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code VarDeclaration}
 	 * labeled alternative in {@link StubParser#varDecl}.
 	 * @param ctx the parse tree
@@ -67,6 +74,13 @@ public interface StubVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprVarDecl(StubParser.ExprVarDeclContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ExprArrayDecl}
+	 * labeled alternative in {@link StubParser#stat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprArrayDecl(StubParser.ExprArrayDeclContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code IfElse}
 	 * labeled alternative in {@link StubParser#stat}.
 	 * @param ctx the parse tree
@@ -102,13 +116,6 @@ public interface StubVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitFloat(StubParser.FloatContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code Maths}
-	 * labeled alternative in {@link StubParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMaths(StubParser.MathsContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code Identifier}
 	 * labeled alternative in {@link StubParser#expr}.
 	 * @param ctx the parse tree
@@ -136,6 +143,13 @@ public interface StubVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitFlipE(StubParser.FlipEContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code AddSub}
+	 * labeled alternative in {@link StubParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAddSub(StubParser.AddSubContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Compare}
 	 * labeled alternative in {@link StubParser#expr}.
@@ -171,6 +185,13 @@ public interface StubVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIndexE(StubParser.IndexEContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code MultDiv}
+	 * labeled alternative in {@link StubParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMultDiv(StubParser.MultDivContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link StubParser#exprList}.
 	 * @param ctx the parse tree

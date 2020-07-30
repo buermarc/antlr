@@ -13,7 +13,7 @@ varDecl
     : varType=type identifier=ID ('=' expression=expr)? ';' #VarDeclaration
     ;
 
-type: 'float' | 'int' | 'void' ; //TODO get rid of void type
+type: type '['']' | 'float' | 'int' | 'void' ; //TODO get rid of void type
 
 functionDecl
     :
@@ -42,10 +42,11 @@ stat: block                              #ExprBlock
 // expr should always return a value for llvm
 //PRINTLN'(' expressions=exprList? ')'   #PrintNewline
 expr: id=ID'(' expressions=exprList? ')' #FunctionCall 
-    | expr '[' expr ']'                 #IndexE
+    | array=expr '[' index=expr ']'                 #IndexE
     | '-' expr                          #NegativeE
     | '!' expr                          #FlipE
-    | left=expr mathChar=('+'|'-'|'*'|'/') right=expr       #Maths 
+    | left=expr mathChar=('*'|'/') right=expr       #MultDiv
+    | left=expr mathChar=('+'|'-') right=expr       #AddSub 
     | left=expr '==' right=expr         #Compare
     | id=ID                                #Identifier
     | number=INT                        #Number

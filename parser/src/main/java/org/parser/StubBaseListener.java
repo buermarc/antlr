@@ -27,6 +27,18 @@ public class StubBaseListener implements StubListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterArrayDeclaration(StubParser.ArrayDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArrayDeclaration(StubParser.ArrayDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterVarDeclaration(StubParser.VarDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -123,6 +135,18 @@ public class StubBaseListener implements StubListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterExprArrayDecl(StubParser.ExprArrayDeclContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExprArrayDecl(StubParser.ExprArrayDeclContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterIfElse(StubParser.IfElseContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -183,18 +207,6 @@ public class StubBaseListener implements StubListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterMaths(StubParser.MathsContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitMaths(StubParser.MathsContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterIdentifier(StubParser.IdentifierContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -238,6 +250,18 @@ public class StubBaseListener implements StubListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitFlipE(StubParser.FlipEContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAddSub(StubParser.AddSubContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAddSub(StubParser.AddSubContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -298,6 +322,18 @@ public class StubBaseListener implements StubListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIndexE(StubParser.IndexEContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterMultDiv(StubParser.MultDivContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMultDiv(StubParser.MultDivContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

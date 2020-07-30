@@ -17,6 +17,18 @@ public interface StubListener extends ParseTreeListener {
 	 */
 	void exitFile(StubParser.FileContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ArrayDeclaration}
+	 * labeled alternative in {@link StubParser#arrayDecl}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrayDeclaration(StubParser.ArrayDeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ArrayDeclaration}
+	 * labeled alternative in {@link StubParser#arrayDecl}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrayDeclaration(StubParser.ArrayDeclarationContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code VarDeclaration}
 	 * labeled alternative in {@link StubParser#varDecl}.
 	 * @param ctx the parse tree
@@ -103,6 +115,18 @@ public interface StubListener extends ParseTreeListener {
 	 */
 	void exitExprVarDecl(StubParser.ExprVarDeclContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ExprArrayDecl}
+	 * labeled alternative in {@link StubParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprArrayDecl(StubParser.ExprArrayDeclContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ExprArrayDecl}
+	 * labeled alternative in {@link StubParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprArrayDecl(StubParser.ExprArrayDeclContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code IfElse}
 	 * labeled alternative in {@link StubParser#stat}.
 	 * @param ctx the parse tree
@@ -163,18 +187,6 @@ public interface StubListener extends ParseTreeListener {
 	 */
 	void exitFloat(StubParser.FloatContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code Maths}
-	 * labeled alternative in {@link StubParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterMaths(StubParser.MathsContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code Maths}
-	 * labeled alternative in {@link StubParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitMaths(StubParser.MathsContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code Identifier}
 	 * labeled alternative in {@link StubParser#expr}.
 	 * @param ctx the parse tree
@@ -222,6 +234,18 @@ public interface StubListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFlipE(StubParser.FlipEContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code AddSub}
+	 * labeled alternative in {@link StubParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterAddSub(StubParser.AddSubContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code AddSub}
+	 * labeled alternative in {@link StubParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitAddSub(StubParser.AddSubContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code Compare}
 	 * labeled alternative in {@link StubParser#expr}.
@@ -282,6 +306,18 @@ public interface StubListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIndexE(StubParser.IndexEContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code MultDiv}
+	 * labeled alternative in {@link StubParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterMultDiv(StubParser.MultDivContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code MultDiv}
+	 * labeled alternative in {@link StubParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitMultDiv(StubParser.MultDivContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link StubParser#exprList}.
 	 * @param ctx the parse tree
