@@ -31,12 +31,18 @@ public class Main {
         }
 
         Path tmpDirPath = Utils.createTmpDir();
+        String generatedIrString;
         try {
             System.err.println(tmpDirPath.toString());
 
-            String generatedIrString = Main.generateIrString(path);
+            generatedIrString = Main.generateIrString(path);
             System.err.println(generatedIrString);
+        } catch (Exception e) {
+            compiler.Utils.delete(tmpDirPath.toFile());
+            throw e;
+        }
 
+        try {
             Path irPath = Main.writeStringToIrFile(path.getFileName().toString(), tmpDirPath, generatedIrString);
             irPath = Main.runOpt(irPath);
             Path bytePath = Main.runLLC(irPath);

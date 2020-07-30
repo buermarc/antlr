@@ -243,6 +243,15 @@ public class StubTests {
     }
 
     @Test
+    void testMath_2() throws Exception {
+        String name = "math_test2";
+        Pair<Integer, String> retPair = StubTests.assertBase(name);
+
+        assertEquals("-35\n-35\n",
+                     retPair.getValue());
+    }
+
+    @Test
     void testNoReturnException_1() throws Exception {
         String name = "no_return_exception_test1";
         NoReturnException e = Assertions.assertThrows(NoReturnException.class, () -> {
@@ -289,5 +298,28 @@ public class StubTests {
                      ">    return 8;\n" +
                      "     ^^^^^^",
                      e.getMessage());
+    }
+
+    @Test
+    void testArray_1() throws Exception {
+        String name = "array_test1";
+        Pair<Integer, String> retPair = StubTests.assertBase(name);
+
+        assertEquals(Integer.valueOf(0), retPair.getKey());
+        assertEquals("1\n",
+                     retPair.getValue());
+    }
+
+    @Test
+    void testArray_2() throws Exception {
+        String name = "array_test2";
+        ValueIsNoArrayException e = Assertions.assertThrows(ValueIsNoArrayException.class, () -> {
+            generateIrStringForTest(name+".st"); 
+        });
+        assertEquals("\n"+
+                    "3:4 Value is not an array <i>\n"+
+                    ">    i[0];\n"+
+                    "     ^",
+                    e.getMessage());
     }
 }

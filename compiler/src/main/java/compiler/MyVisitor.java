@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Stack;
 
 import org.parser.StubBaseVisitor;
-import org.parser.StubParser.MathsContext;
+import org.parser.StubParser.MultDivContext;
+import org.parser.StubParser.AddSubContext;
 import org.parser.StubParser.NumberContext;
 import org.parser.StubParser.FunctionDeclContext;
 import org.parser.StubParser.TypeContext;
@@ -24,6 +25,7 @@ import org.parser.StubParser.ExprListContext;
 import org.parser.StubParser.IdentifierContext;
 import org.parser.StubParser.IfElseContext;
 import org.parser.StubParser.ArrayDeclarationContext;
+import org.parser.StubParser.IndexEContext;
 
 import compiler.exceptions.*;
 
@@ -47,11 +49,12 @@ public class MyVisitor extends StubBaseVisitor<String> {
     String block = "";
 
     Stack<Integer> pseudoRegisters = new Stack<>();
+    Stack<Integer> arrayPseudoRegisters = new Stack<>();
     Stack<Integer> ifElse = new Stack<>();
     Stack<HashMap<String, Type>> pseudoToTypeMapStack = new Stack<>();
 
     HashMap<String, compiler.Type> pseudoToTypeMap = new HashMap<>();
-    HashMap<String, VarWrapper> stubVarToPseudoMap = new HashMap<>();
+    HashMap<String, Object> stubVarToPseudoMap = new HashMap<>();
 
     HashMap<String, StringWrapper> staticStringMap = new HashMap<>();
 
@@ -81,7 +84,53 @@ public class MyVisitor extends StubBaseVisitor<String> {
     }
 
     @Override
-    public String visitMaths(MathsContext ctx) {
+    public String visitMultDiv(MultDivContext ctx) {
+        System.err.println("into addition");
+
+        String leftCxt = visit(ctx.left);
+        String rightCxt = visit(ctx.right);
+        String localPseudoRegisters = "%" + pseudoRegisters.peek();
+        pseudoRegisters.push(pseudoRegisters.pop() + 1);
+
+        Type leftType = pseudoToTypeMap.get(leftCxt);
+        Type rightType = pseudoToTypeMap.get(rightCxt);
+
+        if (leftType == rightType) {
+            pseudoToTypeMap.put(localPseudoRegisters, leftType);
+        } else { 
+            throw new AdditionException(leftType.name(), rightType.name(),
+                    ctx.right.start);
+        }
+
+        String mathNameLLVM = "";
+        
+        String s = ctx.mathChar.getText();
+
+        System.err.println("THIS IS NEW "+s);
+        switch (s) {
+            case "*":
+                mathNameLLVM = "mul";
+                System.err.println("*");
+                break;
+            case "/":
+                mathNameLLVM = "udiv";
+                System.err.println("/");
+                break;
+        }
+        if (leftType == Type.FLOAT && !mathNameLLVM.equals("udiv")) 
+            mathNameLLVM += "f"+mathNameLLVM;
+
+        String output = 
+            localPseudoRegisters + " = " + mathNameLLVM + " " + 
+            leftType.typeName() + " " + 
+            leftCxt + ", " + rightCxt + "\n";
+
+        block += output;
+        return localPseudoRegisters; 
+    }
+
+    @Override
+    public String visitAddSub(AddSubContext ctx) {
         System.err.println("into addition");
 
         String leftCxt = visit(ctx.left);
@@ -113,16 +162,8 @@ public class MyVisitor extends StubBaseVisitor<String> {
                 mathNameLLVM = "sub";
                 System.err.println("-");
                 break;
-            case "*":
-                mathNameLLVM = "mul";
-                System.err.println("*");
-                break;
-            case "/":
-                mathNameLLVM = "udiv";
-                System.err.println("/");
-                break;
         }
-        if (leftType == Type.FLOAT && !mathNameLLVM.equals("udiv")) 
+        if (leftType == Type.FLOAT) 
             mathNameLLVM += "f"+mathNameLLVM;
 
         String output = 
@@ -139,11 +180,13 @@ public class MyVisitor extends StubBaseVisitor<String> {
         System.err.println("into function decl");
 
         pseudoRegisters.push(0);
+        arrayPseudoRegisters.push(0);
         String params = "";
         try { 
             params = visit(ctx.params);
         } catch(Exception e) {}
         pseudoRegisters.pop();
+        arrayPseudoRegisters.pop();
         String type = visit(ctx.fnType);
 
         returnBoolFound.push(false);
@@ -154,6 +197,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
         //Either check or give params other pseudo name convention
         //if (pseudoRegisters.peek() == 0) {
         pseudoRegisters.push(1);
+        arrayPseudoRegisters.push(1);
         //}
 
         ifElse.push(1);
@@ -162,6 +206,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         ifElse.pop();
         pseudoRegisters.pop();
+        arrayPseudoRegisters.pop();
         //block += blockRet;
 
 
@@ -218,7 +263,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
         pseudoRegisters.push(pseudoRegisters.pop() + 1);
 
         pseudoToTypeMap.put(localPseudoRegisters, type);
-        stubVarToPseudoMap.put(id, new VarWrapper(localPseudoRegisters, type));
+        stubVarToPseudoMap.put(id, (Object) new VarWrapper(localPseudoRegisters, type));
         return type.typeName() + " " + localPseudoRegisters;
     }
 
@@ -266,8 +311,19 @@ public class MyVisitor extends StubBaseVisitor<String> {
         blockStack.push(block);
         block = "";
 
+        HashMap<String, Object>  oldMap = (HashMap<String, Object>) stubVarToPseudoMap.clone();
+        stubVarToPseudoMap = new HashMap<>();
+        System.err.println("New Map before block before put all : "+stubVarToPseudoMap);
+        stubVarToPseudoMap.putAll(oldMap);
+        System.err.println("New Map before block after put all : "+stubVarToPseudoMap);
+
         String ret = visitChildren(ctx);
 
+        System.err.println("Old Map After block should have b: "+stubVarToPseudoMap);
+        stubVarToPseudoMap = oldMap;
+        System.err.println("Old Map After block: "+stubVarToPseudoMap);
+        System.err.println("Old Map After block: "+oldMap);
+        
         String retBlock =  block;
         block = blockStack.pop();
         block += retBlock;
@@ -358,7 +414,8 @@ public class MyVisitor extends StubBaseVisitor<String> {
         pseudoRegisters.push(pseudoRegisters.pop() + 1);
 
         pseudoToTypeMap.put(localPseudoRegisters, type);
-        stubVarToPseudoMap.put(id, new VarWrapper(localPseudoRegisters, type));
+        stubVarToPseudoMap.put(id, (Object) new VarWrapper(localPseudoRegisters, type));
+        System.err.println("Put "+id+" into stubVarToPseudoMap, resulting in: "+stubVarToPseudoMap);
         //HashMap which maps varName to pseudoRegister but also rembers type, maybe create VarWrapper
         //Initalize a varibel through allocating and if declaration then store 
 
@@ -412,9 +469,14 @@ public class MyVisitor extends StubBaseVisitor<String> {
         String llvmParameters = "";
         try {
             llvmParameters = visit(ctx.expressions);
-        } catch (Exception e) { 
+        } catch (UndeclaredVariableException e) { 
+            throw e;
+        } catch (UnknownFunctionException e) {
+            throw e;
+        } catch (Exception e) {
             System.err.println(e);
         }
+
         boolean found = false;
         Function fn = null;
         for (Function function : functionList) {
@@ -512,7 +574,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         // TODO load from the pseudo pointer to a new pseudo and return this one
          
-        VarWrapper varWrapper = stubVarToPseudoMap.get(variable);
+        VarWrapper varWrapper = (VarWrapper) stubVarToPseudoMap.get(variable);
         if (varWrapper == null) {
             throw new UndeclaredVariableException(ctx.id);
         }
@@ -612,14 +674,64 @@ public class MyVisitor extends StubBaseVisitor<String> {
         String identifier = ctx.identifier.getText();
         int count = Integer.valueOf(ctx.count.getText());
 
-        String localPseudoRegisters = "%" + pseudoRegisters.peek();
-        pseudoRegisters.push(pseudoRegisters.pop() + 1);
+        String localPseudoRegisters = "%array" + arrayPseudoRegisters.peek();
+        arrayPseudoRegisters.push(arrayPseudoRegisters.pop() + 1);
         pseudoToTypeMap.put(localPseudoRegisters, type);
-        stubVarToPseudoMap.put(identifier, new VarWrapper(localPseudoRegisters, type));
+
+        stubVarToPseudoMap.put(identifier,
+                (Object) new ArrayWrapper(localPseudoRegisters, count, type));
 
         block += localPseudoRegisters+" = alloca ["+
             count+" x "+type.typeName()+"]\n";
-        return "";
+
+        return localPseudoRegisters;
+    }
+
+    @Override
+    public String visitIndexE(IndexEContext ctx) {
+        String index = visit(ctx.index);
+        String arrayIdentifier = ctx.array.getText();
+
+        ArrayWrapper stubVar;
+        try {
+            stubVar = (ArrayWrapper) stubVarToPseudoMap.get(arrayIdentifier);
+        } catch (ClassCastException e) {
+            throw new ValueIsNoArrayException(ctx.array.start);
+        } catch (Exception e) {
+            throw e;
+        }
+
+        String pseudoName = stubVar.getPseudo();
+        Type type = stubVar.getType();
+        int count = stubVar.getCount();
+
+
+        String localPseudoRegisters = "%array" + arrayPseudoRegisters.peek();
+        arrayPseudoRegisters.push(arrayPseudoRegisters.pop() + 1);
+        pseudoToTypeMap.put(localPseudoRegisters, type);
+        
+        block += localPseudoRegisters+" = getelementptr ["+count+" x "+
+            type.typeName()+"], ["+count+" x "+type.typeName()+"]* "+
+            pseudoName+", i64 0, i64 "+index+"\n";    
+
+        if (ctx.getParent().getClass() != AssignExprContext.class) {
+            // if variable comes from formal parameters of a function declaration
+            // TODO check if arrays in functionDeclaration work
+            if (pseudoName.contains("tmp"))
+                    return pseudoName;
+
+            String newlocalPseudoRegisters = "%" + pseudoRegisters.peek();
+            pseudoRegisters.push(pseudoRegisters.pop() + 1);
+
+            pseudoToTypeMap.put(newlocalPseudoRegisters, type);
+
+            block += newlocalPseudoRegisters + " = load " + 
+                type.typeName() + ", " + type.typeName() + "* " + 
+                localPseudoRegisters + "\n";
+
+            return newlocalPseudoRegisters;
+        }
+        return localPseudoRegisters; 
     }
 
     @Override
@@ -632,5 +744,4 @@ public class MyVisitor extends StubBaseVisitor<String> {
         }
         return aggregate + "\n" + nextResult;
     }
-
 }
