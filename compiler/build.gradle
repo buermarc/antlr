@@ -1,5 +1,12 @@
 apply plugin: 'java'
 
+task afterBuildTask(type: Exec) {
+    workingDir "$projectDir"
+    commandLine 'sh', './generateStubc.sh'
+}
+
+build.finalizedBy(afterBuildTask)
+
 repositories {
     mavenCentral()
     flatDir { 
