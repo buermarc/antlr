@@ -1,5 +1,11 @@
 apply plugin: 'java'
 
+task preBuildTask(type: Exec) {
+    workingDir "$projectDir"
+    commandLine 'sh', './preBuildTask.sh'
+}
+build.dependsOn preBuildTask
+
 jar { 
     baseName = 'parser'
         manifest {
