@@ -363,6 +363,15 @@ public class StubTests {
         assertEquals("HI\n6\n5\n^This should be 5\n4\n^This should be 4 again\n",
                      retPair.getValue());
 
+    }
 
+    @Test
+    void testNoMainFunctionExceptionTest_1() throws Exception {
+        String name = "no_main_function_test1_exc";
+        NoMainFunctionException e = Assertions.assertThrows(NoMainFunctionException.class, () -> {
+            generateIrStringForTest(name+".st"); 
+        });
+        assertEquals("Given programm file appears to have no main function",
+                     e.getMessage());
     }
 }

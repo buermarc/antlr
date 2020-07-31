@@ -23,6 +23,11 @@ public class FunctionVisitor extends StubBaseVisitor<String> {
     List<Function> functionList = new ArrayList<>();
     HashMap<String, ArrayType> arrayTypeMap = new HashMap<>();
     String currentFunctionName;
+    boolean mainFunctionFound = false;
+
+    public boolean mainFunctionFound() {
+        return mainFunctionFound;
+    }
 
     public List<Function> getFunctionList() {
         return functionList;
@@ -96,6 +101,9 @@ public class FunctionVisitor extends StubBaseVisitor<String> {
         TypeInterface type = Type.fromString(visit(ctx.fnType));
         String name = ctx.id.getText();
         currentFunction = new Function(type, name);
+
+        if (name.equals("main")) 
+            mainFunctionFound = true;
 
         // visiting the params should fill the Function Instance with params
         // we should not need a stack as the definition of functions should not

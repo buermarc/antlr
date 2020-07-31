@@ -14,6 +14,8 @@ import java.util.HashMap;
 import org.parser.StubLexer;
 import org.parser.StubParser;
 
+import compiler.exceptions.NoMainFunctionException;
+
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -94,6 +96,9 @@ public class Main {
 
         FunctionVisitor functionVisitor = new FunctionVisitor();
         functionVisitor.visit(tree);
+
+        if (!functionVisitor.mainFunctionFound())
+            throw new NoMainFunctionException();
 
         String staticDefinitions =  functionVisitor.getStaticDefinitions();
         List<Function> functionList = functionVisitor.getFunctionList();
