@@ -1,4 +1,3 @@
-// TODO split grammar file into multiple files
 grammar Stub ;
 
 file
@@ -30,29 +29,27 @@ formalParameter
 
 block: '{' stat* '}' ;
 
-stat: block                              #ExprBlock
-    | varDecl                            #ExprVarDecl
-    | arrayDecl                          #ExprArrayDecl
-    | 'if' expression=expr 'then' thenBlock=stat ('else' elseBlock=stat)? #IfElse
-    | ret='return' returnE=expr? ';'                #Return
-    | left=expr '=' right=expr ';'                 #AssignExpr// assignment on expr
-    | expr ';'                          #Expression// call a funtion
+stat: block                                                                 #ExprBlock
+    | varDecl                                                               #ExprVarDecl
+    | arrayDecl                                                             #ExprArrayDecl
+    | 'if' expression=expr 'then' thenBlock=stat ('else' elseBlock=stat)?   #IfElse
+    | ret='return' returnE=expr? ';'                                        #Return
+    | left=expr '=' right=expr ';'                                          #AssignExpr
+    | expr ';'                                                              #Expression
     ;
 
-// expr should always return a value for llvm
-//PRINTLN'(' expressions=exprList? ')'   #PrintNewline
-expr: id=ID'(' expressions=exprList? ')' #FunctionCall 
-    | array=expr '[' index=expr ']'                 #IndexE
-    | '-' expr                          #NegativeE
-    | '!' expr                          #FlipE
-    | left=expr mathChar=('*'|'/') right=expr       #MultDiv
-    | left=expr mathChar=('+'|'-') right=expr       #AddSub 
-    | left=expr '==' right=expr         #Compare
-    | id=ID                                #Identifier
-    | number=INT                        #Number
-    | number=FLOAT                      #Float
-    | chars=STRING                      #String 
-    | '(' expr ')'                      #Cover
+expr: id=ID'(' expressions=exprList? ')'                                    #FunctionCall 
+    | array=expr '[' index=expr ']'                                         #IndexE
+    | '-' expr                                                              #NegativeE
+    | '!' expr                                                              #FlipE
+    | left=expr mathChar=('*'|'/') right=expr                               #MultDiv
+    | left=expr mathChar=('+'|'-') right=expr                               #AddSub 
+    | left=expr '==' right=expr                                             #Compare
+    | id=ID                                                                 #Identifier
+    | number=INT                                                            #Number
+    | number=FLOAT                                                          #Float
+    | chars=STRING                                                          #String 
+    | '(' expr ')'                                                          #Cover
     ;
 
 exprList: expr (',' expr)* ; // arg list
