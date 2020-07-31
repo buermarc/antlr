@@ -27,12 +27,8 @@ public class UnderlineCompileException extends CompileException {
 
         String input = tokens.getInputStream().toString(); 
         String[] lines = input.split("\n");
-        System.err.println(input);
-        System.err.println(lines.length);
         String errorLine = ">"+lines[line - 1];
         errMessage += errorLine+"\n";
-        System.err.println(startIndex);
-        System.err.println(stopIndex);
         
         String underline = "";
         for (int i = 0; i <= charPositionInLine; ++i)

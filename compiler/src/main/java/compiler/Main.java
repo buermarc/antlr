@@ -22,22 +22,37 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 public class Main {
 
+    private static String usage = "stubc <code.st> [-ll]\n -ll : Build executable and print the generated IR String";
+
     public static void main(String[] args) throws Exception {
-        System.err.println("entry");
-        Path path;
-        if (args.length == 1) {
+        Path path = null;
+        boolean printLL = false;
+        if (args.length == 0) {
+            throw new Exception("No input file given\n"+usage);
+        }
+
+        if (args.length != 0) 
             path = Paths.get(args[0]);
-        } else {
-            throw new Exception("No input file given");
+
+        if (args.length == 2) {
+            String flag = args[1];
+            if (flag.equals("-ll")) {
+                printLL = true;
+            } else {
+                throw new Exception("Unknow Flags given\n"+usage);
+            }
+        }
+        if (args.length == 3) {
+            throw new Exception("Unknow usage of stubc\n"+usage);
         }
 
         Path tmpDirPath = Utils.createTmpDir();
         String generatedIrString;
         try {
-            System.err.println(tmpDirPath.toString());
 
             generatedIrString = Main.generateIrString(path);
-            System.err.println(generatedIrString);
+
+
         } catch (Exception e) {
             compiler.Utils.delete(tmpDirPath.toFile());
             throw e;
@@ -58,6 +73,10 @@ public class Main {
             compiler.Utils.delete(tmpDirPath.toFile());
             throw e;
         }
+
+        if (printLL)
+            System.out.println(generatedIrString);
+
         compiler.Utils.delete(tmpDirPath.toFile());
 
     }
@@ -174,7 +193,6 @@ public class Main {
         ProcessBuilder processBuilder = new ProcessBuilder();
 
 
-        System.err.println(outputPath);
         processBuilder.command("clang", "-no-pie",
                                bytePath.toAbsolutePath().toString(),
                                "-o", outputPath);

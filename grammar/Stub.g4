@@ -6,14 +6,14 @@ file
     (functionDecl | varDecl)+ ;
 
 arrayDecl
-    : 'let' mutable='mut'? varType=type identifier=ID '[' count=INT ']' ';'  #ArrayDeclaration
+    : 'let' mutable='mut'? varType=type '[' count=INT ']' identifier=ID ';'  #ArrayDeclaration
     ;
 
 varDecl
     : 'let' mutable='mut'? varType=type identifier=ID ('=' expression=expr)? ';' #VarDeclaration
     ;
 
-type: type '['']' | 'float' | 'int' | 'void' ; //TODO get rid of void type
+type: type '[]' | 'float' | 'int' | 'void' ; //TODO get rid of void type
 
 functionDecl
     :

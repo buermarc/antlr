@@ -43,11 +43,9 @@ public class Function {
 
     public static boolean compare(Function f1, Function f2) {
         if (!f1.name.equals(f2.name)) { 
-            System.err.println("name false");
             return false;
         }
 
-        System.err.println("CHECK FUNCTIONS " + f1.name + " " + f2.name);
         if (f1.name.equals("println"))
             return true;
 
@@ -55,7 +53,6 @@ public class Function {
             //Check if entrys are the same TODO consider order of params
             // boolean forEach = true; 
             if ((f1.parameters.size() == 0) && (f2.parameters.size() == 0))  {
-                System.err.println("Both functions have 0 params and same name");
                 return true;
             }
 
@@ -63,10 +60,8 @@ public class Function {
                 boolean found = false;
                 TypeInterface type = parameter1.getKey();
 
-                System.err.println(type + " :: " + f1.parameters );
                 for (Pair<TypeInterface, String>parameter2 : f1.parameters) {
                     // Check if type is also the same, we don't care about the name of the parameters
-                    System.err.println(type + " :: " + parameter2.getKey());
                     if (type == parameter2.getKey()) {
                         found = true;
                     }
@@ -76,8 +71,6 @@ public class Function {
             }
             return true;
         } else { 
-            System.err.println("Wrong paramcount");
-            System.err.println(f1.parameters.size()+" "+ f2.parameters.size());
             return false;
         }
     }

@@ -83,7 +83,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
     public String visitFile(FileContext ctx) {
 
         visitChildren(ctx);
-        System.err.println("last out hopefully");
 
         if (staticDeclaration.equals("")) {
             return block;
@@ -94,7 +93,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitMultDiv(MultDivContext ctx) {
-        System.err.println("into addition");
 
         String leftCxt = visit(ctx.left);
         String rightCxt = visit(ctx.right);
@@ -114,15 +112,12 @@ public class MyVisitor extends StubBaseVisitor<String> {
         
         String s = ctx.mathChar.getText();
 
-        System.err.println("THIS IS NEW "+s);
         switch (s) {
             case "*":
                 mathNameLLVM = "mul";
-                System.err.println("*");
                 break;
             case "/":
                 mathNameLLVM = "udiv";
-                System.err.println("/");
                 break;
         }
         if (leftType == Type.FLOAT && !mathNameLLVM.equals("udiv")) 
@@ -139,7 +134,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitAddSub(AddSubContext ctx) {
-        System.err.println("into addition");
 
         String leftCxt = visit(ctx.left);
         String rightCxt = visit(ctx.right);
@@ -159,15 +153,12 @@ public class MyVisitor extends StubBaseVisitor<String> {
         
         String s = ctx.mathChar.getText();
 
-        System.err.println("THIS IS NEW "+s);
         switch (s) {
             case "+": 
                 mathNameLLVM = "add";
-                System.err.println("+");
                 break;
             case "-":
                 mathNameLLVM = "sub";
-                System.err.println("-");
                 break;
         }
         if (leftType == Type.FLOAT) 
@@ -184,7 +175,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitFunctionDecl(FunctionDeclContext ctx) {
-        System.err.println("into function decl");
 
         String oldBlock = block;
         block = "";
@@ -256,7 +246,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitFormalParameters(FormalParametersContext ctx) {
-        System.err.println("into params");
         int count = ctx.getChildCount();
 
         String params = "";
@@ -272,7 +261,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitFormalParameter(FormalParameterContext ctx) {
-        System.err.println("into param");
         String id = ctx.id.getText();
         TypeInterface type = Type.fromString(visit(ctx.paramType));
 
@@ -283,16 +271,13 @@ public class MyVisitor extends StubBaseVisitor<String> {
         String localPseudoRegisters = peekAndIncrease("tmp", pseudoRegisters);
 
         VarWrapper wrapper;
-        System.err.println("ARRAY IS "+type.isArray()+" "+id);
         if (type.isArray()) {
-            System.err.println("into array "+type.isArray()+" "+id);
             ArrayType functionVisitorType = arrayTypeMap.get(currentFunctionName+currencVisitedChild);
 
             ArrayType arrayType = (ArrayType) type;
             wrapper = new ArrayWrapper(localPseudoRegisters, functionVisitorType.getCount(), mutable, arrayType);
             stubVarToPseudoMap.put(id, wrapper);
             ArrayWrapper arw = (ArrayWrapper) stubVarToPseudoMap.get(id);
-            System.err.println("did work the fuck is up" +arw);
             pseudoToTypeMap.put(localPseudoRegisters, arrayType);
         }
 
@@ -312,7 +297,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitNumber(NumberContext ctx) {
-        System.err.println("into number");
         pseudoToTypeMap.put(ctx.number.getText(), compiler.Type.INT);
         return ctx.number.getText();
     }
@@ -321,7 +305,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
     public String visitFloat(FloatContext ctx) {
         // Unsure which standard the llvm ir code wants for its floats and doubles
 
-        System.err.println("into float");
         long bits = Double.doubleToLongBits(Double.valueOf(ctx.number.getText()));
         String binary = Long.toBinaryString(bits);
         int decimal = Integer.parseInt(binary, 2);
@@ -329,14 +312,12 @@ public class MyVisitor extends StubBaseVisitor<String> {
         returnString = "0x" + returnString;
 
 
-        System.err.println(returnString);
         pseudoToTypeMap.put(returnString, compiler.Type.FLOAT);
         return returnString;
     }
 
     @Override
     public String visitBlock (BlockContext ctx) {
-        System.err.println("into block");
         blockStack.push(block);
         block = "";
 
@@ -357,22 +338,18 @@ public class MyVisitor extends StubBaseVisitor<String> {
     @Override
     public String visitExpression (ExpressionContext ctx) {
         //get each expression
-        System.err.println("into stat");
         return visitChildren(ctx);
     }
 
     /*
     @Override 
     public String visitPrintNewline(PrintNewlineContext ctx) {
-        System.err.println("into visitPrintNewline");
         String localPseudoRegisters = "%" + pseudoRegisters.peek();
         pseudoRegisters.push(pseudoRegisters.pop() + 1);
         // TODO set type of pseudoRegister
         String expressions = visit(ctx.expressions);
-        System.err.println(expressions);
         /*
         StringWrapper stringVarValue = staticStringMap.get(expressions);
-        System.err.println(stringVarValue.getString());
         int len = stringVarValue.getLength();
         */
 
@@ -386,7 +363,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitString(StringContext ctx) {
-        System.err.println("into visitString");
         String stringRegister = "@.str_"+staticStringReferencePart++;
         String string = ctx.chars.getText().replaceAll("\"", "");
 
@@ -398,7 +374,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
         staticStringMap.put(stringRegister, new StringWrapper(string, len));
         staticDeclaration += stringRegister + " = private unnamed_addr constant [" + 
             len + " x i8] c\"" + string + "\\0A\\00\"\n";
-        System.err.println(staticDeclaration);
         
         String expr = "i8* getelementptr inbounds"+
             " (["+len+" x i8], ["+len+" x i8]* "+
@@ -445,7 +420,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         pseudoToTypeMap.put(localPseudoRegisters, type);
         stubVarToPseudoMap.put(id, new VarWrapper(localPseudoRegisters, type, mutable));
-        System.err.println("Put "+id+" into stubVarToPseudoMap, resulting in: "+stubVarToPseudoMap);
         //HashMap which maps varName to pseudoRegister but also rembers type, maybe create VarWrapper
         //Initalize a varibel through allocating and if declaration then store 
 
@@ -478,7 +452,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
         TypeInterface leftType = pseudoToTypeMap.get(left);
         TypeInterface rightType = pseudoToTypeMap.get(right);
 
-        System.err.println("EQUALS: " + leftType.name() + " || " + rightType.name());
         if (!leftType.name().equals(rightType.name())) {
             throw new AssignmentException(leftType.name(),
                     rightType.name(),
@@ -493,7 +466,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitFunctionCall(FunctionCallContext ctx) {
-        System.err.println("In MyVisitor into visitFunctionCall");
         // Check if called Function is in generated functionList
 
         Function oldFunction = currentCalledFunction;
@@ -508,7 +480,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
         } catch (UnknownFunctionException e) {
             throw e;
         } catch (Exception e) {
-            System.err.println(e);
         }
 
         boolean found = false;
@@ -601,7 +572,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
     @Override
     public String visitIdentifier(IdentifierContext ctx) {
         //get identifier name, check if it is in stubVarToPseudoMap if yes return the pseudoRegister
-        System.err.println("into visitIdentifier");
         String variable = ctx.id.getText();
 
         // TODO load from the pseudo pointer to a new pseudo and return this one
@@ -778,7 +748,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
             throw new NotMutableException(ctx.array.start);
 
         pseudoToTypeMap.put(localPseudoRegisters, type);
-        System.err.println(type);
         return localPseudoRegisters; 
     }
 

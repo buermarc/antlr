@@ -5,7 +5,6 @@ import java.util.Stack;
 interface TypeInterface {
 
     static public TypeInterface fromString(String string) {
-        System.err.println("Should not get here");
         return null;
     };
 

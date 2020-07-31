@@ -40,15 +40,12 @@ public class FunctionVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitFunctionCall(FunctionCallContext ctx) {
-        System.err.println("into visitFunctionCall");
         if (ctx.expressions != null && 
                 ctx.expressions.getChild(0).getClass() == StringContext.class &&
                 ctx.id.getText().equals("println")) {
             functionList.add(new Function(Type.INT, "println"));
-            System.err.println("STAT"+staticDefinitions);
             if (!staticDefinitions.contains("printf"))
                 staticDefinitions += "declare i32 @printf(i8*, ...)\n";
-            System.err.println("STAT"+staticDefinitions);
                 }
         currentFunctionName = ctx.id.getText();
         try {
@@ -105,7 +102,6 @@ public class FunctionVisitor extends StubBaseVisitor<String> {
         try {
             visit(ctx.params);
         } catch (Exception e) {
-            System.err.println(e);
         }
         functionList.add(currentFunction);
         visit(ctx.bl);
@@ -114,8 +110,6 @@ public class FunctionVisitor extends StubBaseVisitor<String> {
     
     @Override
     public String visitBlock(BlockContext ctx) {
-        System.err.println("...");
-        System.err.println("Into Block worked");
         return visitChildren(ctx);
     }
 
