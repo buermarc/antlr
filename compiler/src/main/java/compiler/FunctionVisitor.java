@@ -18,8 +18,6 @@ import java.util.HashMap;
 
 public class FunctionVisitor extends StubBaseVisitor<String> {
 
-    // hashmap is a bad idea because it can't handled overloaded functions
-    // only could if we use name with all specific info for function
     String staticDefinitions = "";
     Function currentFunction = null;
     List<Function> functionList = new ArrayList<>();
@@ -44,9 +42,13 @@ public class FunctionVisitor extends StubBaseVisitor<String> {
                 ctx.expressions.getChild(0).getClass() == StringContext.class &&
                 ctx.id.getText().equals("println")) {
             functionList.add(new Function(Type.INT, "println"));
+
             if (!staticDefinitions.contains("printf"))
                 staticDefinitions += "declare i32 @printf(i8*, ...)\n";
                 }
+
+        // Ugly remembering what size an array has when used as a function parameter
+        // very likely to cause unwanten behaviour later
         currentFunctionName = ctx.id.getText();
         try {
             visit(ctx.expressions);

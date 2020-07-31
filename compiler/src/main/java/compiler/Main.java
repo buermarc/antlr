@@ -27,6 +27,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Path path = null;
         boolean printLL = false;
+
         if (args.length == 0) {
             throw new Exception("No input file given\n"+usage);
         }
@@ -35,14 +36,14 @@ public class Main {
             path = Paths.get(args[0]);
 
         if (args.length == 2) {
-            String flag = args[1];
-            if (flag.equals("-ll")) {
+            if (args[1].equals("-ll")) {
                 printLL = true;
             } else {
                 throw new Exception("Unknow Flags given\n"+usage);
             }
         }
-        if (args.length == 3) {
+
+        if (args.length >= 3) {
             throw new Exception("Unknow usage of stubc\n"+usage);
         }
 
@@ -98,8 +99,8 @@ public class Main {
         List<Function> functionList = functionVisitor.getFunctionList();
         HashMap<String, ArrayType> arrayTypeMap = functionVisitor.getArrayMap();
 
-        MyVisitor myVisitor = new MyVisitor(staticDefinitions, functionList, arrayTypeMap);
-        return myVisitor.visit(tree);
+        StubVisitor stubVisitor = new StubVisitor(staticDefinitions, functionList, arrayTypeMap);
+        return stubVisitor.visit(tree);
     }
 
     public static Path writeStringToIrFile(String name, Path tmpDirPath, String generatedIrString) throws Exception {

@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Stack;
 
 import org.parser.StubBaseVisitor;
+
+// Could use import org.parser.StubParser.*;
 import org.parser.StubParser.MultDivContext;
 import org.parser.StubParser.AddSubContext;
 import org.parser.StubParser.NumberContext;
@@ -29,16 +31,8 @@ import org.parser.StubParser.IndexEContext;
 
 import compiler.exceptions.*;
 
-public class MyVisitor extends StubBaseVisitor<String> {
+public class StubVisitor extends StubBaseVisitor<String> {
 
-    // what is scope specific?, 
-    // functions, variables
-    //
-    // when is a new block created?
-    // when entering a new block
-    //
-    // what not:
-    // static strings
 
     String staticDeclaration = "";
     String definedFunctions = "";
@@ -70,7 +64,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
     /**
      * Constructor takes parameters given from a earlier visitor
      * */
-    public MyVisitor(String staticDefinitions, List<Function> functionList, 
+    public StubVisitor(String staticDefinitions, List<Function> functionList, 
             HashMap<String, ArrayType> arrayTypeMap) {
         super();
         this.staticDeclaration +=  staticDefinitions;
@@ -192,29 +186,21 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         returnBoolFound.push(false);
 
-        
         oldBlock += "define " + type + " @" + ctx.id.getText() +
             "(" + params + ") " + "{\n";
         oldBlock += block;
         block = oldBlock;
 
-
-
-        //Either check or give params other pseudo name convention
-        //if (pseudoRegisters.peek() == 0) {
         pseudoRegisters.push(1);
         arrayPseudoRegisters.push(1);
-        //}
 
         ifElse.push(1);
 
-        String blockRet = visit(ctx.bl);
+        visit(ctx.bl);
 
         ifElse.pop();
         pseudoRegisters.pop();
         arrayPseudoRegisters.pop();
-        //block += blockRet;
-
 
         if (type == "void") {
             block += "ret void\n";
@@ -304,13 +290,13 @@ public class MyVisitor extends StubBaseVisitor<String> {
     @Override
     public String visitFloat(FloatContext ctx) {
         // Unsure which standard the llvm ir code wants for its floats and doubles
+        // So doubles and floats will very likely cause llc to throw an error :|
 
         long bits = Double.doubleToLongBits(Double.valueOf(ctx.number.getText()));
         String binary = Long.toBinaryString(bits);
         int decimal = Integer.parseInt(binary, 2);
         String returnString = Integer.toString(decimal, 16);
         returnString = "0x" + returnString;
-
 
         pseudoToTypeMap.put(returnString, compiler.Type.FLOAT);
         return returnString;
@@ -337,29 +323,8 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitExpression (ExpressionContext ctx) {
-        //get each expression
         return visitChildren(ctx);
     }
-
-    /*
-    @Override 
-    public String visitPrintNewline(PrintNewlineContext ctx) {
-        String localPseudoRegisters = "%" + pseudoRegisters.peek();
-        pseudoRegisters.push(pseudoRegisters.pop() + 1);
-        // TODO set type of pseudoRegister
-        String expressions = visit(ctx.expressions);
-        /*
-        StringWrapper stringVarValue = staticStringMap.get(expressions);
-        int len = stringVarValue.getLength();
-        */
-
-    /*
-        block += localPseudoRegisters+" = call  i32 (i8*, ...) "+
-            "@printf(" + expressions + ")\n";
-
-        return localPseudoRegisters;
-    }
-    */
 
     @Override
     public String visitString(StringContext ctx) {
@@ -420,8 +385,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         pseudoToTypeMap.put(localPseudoRegisters, type);
         stubVarToPseudoMap.put(id, new VarWrapper(localPseudoRegisters, type, mutable));
-        //HashMap which maps varName to pseudoRegister but also rembers type, maybe create VarWrapper
-        //Initalize a varibel through allocating and if declaration then store 
 
         String initialize = localPseudoRegisters + " = alloca " + type.typeName() + ", align 4\n";
         block += initialize;
@@ -527,12 +490,11 @@ public class MyVisitor extends StubBaseVisitor<String> {
             ((FunctionCallContext) ctx.getParent()).id.getText() 
                 == "println" ? false : true;
 
-        // get each child what it returns
+        // Step through each child except of the ',' char
         int count = ctx.getChildCount();
         String expressionList = "";
         for (int i = 0; i < count; i=i+2) {
            String variable = visit(ctx.getChild(i)); 
-           // get variable from return, if it is in 
 
            TypeInterface type;
            try { 
@@ -575,6 +537,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
         String variable = ctx.id.getText();
 
         // TODO load from the pseudo pointer to a new pseudo and return this one
+        // Well or let it like this seems it works kinda
          
         VarWrapper varWrapper = stubVarToPseudoMap.get(variable);
         if (varWrapper == null) {
@@ -655,12 +618,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
             returnBoolFinallyFound = thenBlockReturn;
         }
 
-        if (returnBoolFinallyFound) {
-            // returnBoolFound.pop();
-            // returnBoolFound.push(returnBoolFinallyFound);
-            // do nothing llvm still needs a return maybe solve with flag 
-        }
-
         block += "\n"+ifEnd+":\n";
         oldBlock += block;
         block = oldBlock;
@@ -701,16 +658,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
             throw new ValueIsNoArrayException(ctx.array.start);
         }
 
-
-        /*
-        try {
-            stubVar = (ArrayWrapper) stubVarToPseudoMap.get(arrayIdentifier);
-        } catch (ClassCastException e) {
-        } catch (Exception e) {
-            throw e;
-        }
-        */
-
         String pseudoName = stubVar.getPseudo();
         ArrayType arrayType = (ArrayType) stubVar.getType();
 
@@ -729,11 +676,6 @@ public class MyVisitor extends StubBaseVisitor<String> {
             pseudoName+", i64 0, i64 "+index+"\n";    
 
         if (ctx.getParent().getClass() != AssignExprContext.class) {
-            // if variable comes from formal parameters of a function declaration
-            // TODO check if arrays in functionDeclaration work
-            //if (pseudoName.contains("tmp"))
-            //      return pseudoName;
-
             String newlocalPseudoRegisters = peekAndIncrease("", pseudoRegisters);
 
             pseudoToTypeMap.put(newlocalPseudoRegisters, type);
@@ -771,4 +713,8 @@ public class MyVisitor extends StubBaseVisitor<String> {
         stack.push(stack.pop() + 1);
         return localPseudoRegisters;
     }
+
+
+
+    // This code is a dumpster fire
 }
