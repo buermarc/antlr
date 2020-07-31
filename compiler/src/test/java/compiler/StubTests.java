@@ -330,4 +330,39 @@ public class StubTests {
                     "     ^",
                     e.getMessage());
     }
+
+    @Test
+    void testArrayOutOfBounds_1() throws Exception {
+        String name = "array_outofbounds_test1_exc";
+        ArrayOutOfBoundsException e = Assertions.assertThrows(ArrayOutOfBoundsException.class, () -> {
+            generateIrStringForTest(name+".st"); 
+        });
+        assertEquals("\n"+
+                     "5:6 Array index is out of bounds <3>\n"+
+                     ">    a[3] = 4;\n"+
+                     "       ^",
+                     e.getMessage());
+    }
+
+    @Test
+    void testOverload_1() throws Exception {
+        String name = "overload_test1";
+        Pair<Integer, String> retPair = StubTests.assertBase(name);
+
+        assertEquals(Integer.valueOf(0), retPair.getKey());
+        assertEquals("4\n6\n",
+                     retPair.getValue());
+    }
+
+    @Test
+    void testManyThings_1() throws Exception {
+        String name = "many_things_test1";
+        Pair<Integer, String> retPair = StubTests.assertBase(name);
+
+        assertEquals(Integer.valueOf(7), retPair.getKey());
+        assertEquals("HI\n6\n5\n^This should be 5\n4\n^This should be 4 again\n",
+                     retPair.getValue());
+
+
+    }
 }

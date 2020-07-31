@@ -2,7 +2,7 @@ package compiler;
 
 import java.util.Stack;
 
-public enum Type {
+public enum Type implements TypeInterface {
     VOID ("void"),
     INT ("i32"),
     INT1 ("i1"),
@@ -16,9 +16,11 @@ public enum Type {
         this.typeName = typeName;
     }
 
+    public boolean isArray() { return false;}
+
     public String typeName() { return this.typeName; } 
 
-    static public Type fromString(String string) {
+    static public TypeInterface fromString(String string) {
         switch (string) {
             case "void":
                 return VOID;
@@ -33,16 +35,16 @@ public enum Type {
             case "double":
                 return DOUBLE;
             default:
-                return VOID;
+                return ArrayType.fromString(string);
         }
     }
-    static public Pair<String, String> trunc(String pseudo, Type intputType,
-                                 Type targetType,
+    static public Pair<String, String> trunc(String pseudo, TypeInterface inputType,
+                                 TypeInterface targetType,
                                  Stack<Integer> pseudoRegisters,
                                  String block) {
         String localPseudoRegister = "%"+pseudoRegisters.peek();
         pseudoRegisters.push(pseudoRegisters.pop()+1);
-        block += localPseudoRegister+" = trunc "+intputType.typeName()+" "+pseudo+
+        block += localPseudoRegister+" = trunc "+inputType.typeName()+" "+pseudo+
                                    " to "+ targetType.typeName()+"\n";
         return new Pair<String, String>(localPseudoRegister, block);
     }

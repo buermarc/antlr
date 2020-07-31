@@ -51,23 +51,31 @@ public class MyVisitor extends StubBaseVisitor<String> {
     Stack<Integer> pseudoRegisters = new Stack<>();
     Stack<Integer> arrayPseudoRegisters = new Stack<>();
     Stack<Integer> ifElse = new Stack<>();
-    Stack<HashMap<String, Type>> pseudoToTypeMapStack = new Stack<>();
+    Stack<HashMap<String, TypeInterface>> pseudoToTypeMapStack = new Stack<>();
 
-    HashMap<String, compiler.Type> pseudoToTypeMap = new HashMap<>();
-    HashMap<String, Object> stubVarToPseudoMap = new HashMap<>();
+    HashMap<String, TypeInterface> pseudoToTypeMap = new HashMap<>();
+    HashMap<String, VarWrapper> stubVarToPseudoMap = new HashMap<>();
 
     HashMap<String, StringWrapper> staticStringMap = new HashMap<>();
+    HashMap<String, ArrayType> arrayTypeMap = new HashMap<>();
 
     int staticStringReferencePart = 1;
     boolean assignmentLeft = false;
 
     List<Function> functionList;
     Function currentCalledFunction;
+    String currentFunctionName = "";
+    int currencVisitedChild = 0;
 
-    public MyVisitor(String staticDefinitions, List<Function> functionList) {
+    /**
+     * Constructor takes parameters given from a earlier visitor
+     * */
+    public MyVisitor(String staticDefinitions, List<Function> functionList, 
+            HashMap<String, ArrayType> arrayTypeMap) {
         super();
         this.staticDeclaration +=  staticDefinitions;
         this.functionList = functionList;
+        this.arrayTypeMap = arrayTypeMap;
     }
 
 
@@ -90,11 +98,10 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         String leftCxt = visit(ctx.left);
         String rightCxt = visit(ctx.right);
-        String localPseudoRegisters = "%" + pseudoRegisters.peek();
-        pseudoRegisters.push(pseudoRegisters.pop() + 1);
+        String localPseudoRegisters = peekAndIncrease("", pseudoRegisters);
 
-        Type leftType = pseudoToTypeMap.get(leftCxt);
-        Type rightType = pseudoToTypeMap.get(rightCxt);
+        TypeInterface leftType = pseudoToTypeMap.get(leftCxt);
+        TypeInterface rightType = pseudoToTypeMap.get(rightCxt);
 
         if (leftType == rightType) {
             pseudoToTypeMap.put(localPseudoRegisters, leftType);
@@ -136,11 +143,10 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         String leftCxt = visit(ctx.left);
         String rightCxt = visit(ctx.right);
-        String localPseudoRegisters = "%" + pseudoRegisters.peek();
-        pseudoRegisters.push(pseudoRegisters.pop() + 1);
+        String localPseudoRegisters = peekAndIncrease("", pseudoRegisters);
 
-        Type leftType = pseudoToTypeMap.get(leftCxt);
-        Type rightType = pseudoToTypeMap.get(rightCxt);
+        TypeInterface leftType = pseudoToTypeMap.get(leftCxt);
+        TypeInterface rightType = pseudoToTypeMap.get(rightCxt);
 
         if (leftType == rightType) {
             pseudoToTypeMap.put(localPseudoRegisters, leftType);
@@ -180,20 +186,29 @@ public class MyVisitor extends StubBaseVisitor<String> {
     public String visitFunctionDecl(FunctionDeclContext ctx) {
         System.err.println("into function decl");
 
+        String oldBlock = block;
+        block = "";
         pseudoRegisters.push(0);
         arrayPseudoRegisters.push(0);
         String params = "";
+        currentFunctionName = ctx.id.getText();
         try { 
             params = visit(ctx.params);
         } catch(Exception e) {}
+        currentFunctionName = "";
         pseudoRegisters.pop();
         arrayPseudoRegisters.pop();
         String type = visit(ctx.fnType);
 
         returnBoolFound.push(false);
 
-        block += "define " + type + " @" + ctx.id.getText() +
+        
+        oldBlock += "define " + type + " @" + ctx.id.getText() +
             "(" + params + ") " + "{\n";
+        oldBlock += block;
+        block = oldBlock;
+
+
 
         //Either check or give params other pseudo name convention
         //if (pseudoRegisters.peek() == 0) {
@@ -234,7 +249,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
         returnBoolFound.push(true);
 
         String retVar = visit(ctx.returnE);
-        Type returnType = pseudoToTypeMap.get(retVar);
+        TypeInterface returnType = pseudoToTypeMap.get(retVar);
         block += "ret " + returnType.typeName() + " " + retVar + "\n";
         return "";
     }
@@ -246,6 +261,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         String params = "";
         for (int i = 0; i < count; i=i+2) {
+            currencVisitedChild = i;
             params += visit(ctx.getChild(i));
 
             if (i < count-1)
@@ -258,17 +274,39 @@ public class MyVisitor extends StubBaseVisitor<String> {
     public String visitFormalParameter(FormalParameterContext ctx) {
         System.err.println("into param");
         String id = ctx.id.getText();
-        Type type = Type.fromString(visit(ctx.paramType));
+        TypeInterface type = Type.fromString(visit(ctx.paramType));
 
         boolean mutable = false;
         if (ctx.mutable != null)
             mutable = true;
 
-        String localPseudoRegisters = "%tmp" + pseudoRegisters.peek();
-        pseudoRegisters.push(pseudoRegisters.pop() + 1);
+        String localPseudoRegisters = peekAndIncrease("tmp", pseudoRegisters);
 
-        pseudoToTypeMap.put(localPseudoRegisters, type);
-        stubVarToPseudoMap.put(id, (Object) new VarWrapper(localPseudoRegisters, type, mutable));
+        VarWrapper wrapper;
+        System.err.println("ARRAY IS "+type.isArray()+" "+id);
+        if (type.isArray()) {
+            System.err.println("into array "+type.isArray()+" "+id);
+            ArrayType functionVisitorType = arrayTypeMap.get(currentFunctionName+currencVisitedChild);
+
+            ArrayType arrayType = (ArrayType) type;
+            wrapper = new ArrayWrapper(localPseudoRegisters, functionVisitorType.getCount(), mutable, arrayType);
+            stubVarToPseudoMap.put(id, wrapper);
+            ArrayWrapper arw = (ArrayWrapper) stubVarToPseudoMap.get(id);
+            System.err.println("did work the fuck is up" +arw);
+            pseudoToTypeMap.put(localPseudoRegisters, arrayType);
+        }
+
+
+        String newlocalPseudoRegisters = peekAndIncrease("tmp", pseudoRegisters);
+        String initialize = newlocalPseudoRegisters + " = alloca " + type.typeName() + ", align 4\n";
+        block += initialize;
+        block += "store " + type.typeName() + " " + localPseudoRegisters + ", " +  
+            type.typeName() + "* " + newlocalPseudoRegisters + ", align 4\n";
+
+        wrapper = new VarWrapper(newlocalPseudoRegisters, type, mutable);
+        pseudoToTypeMap.put(newlocalPseudoRegisters, type);
+        stubVarToPseudoMap.put(id, wrapper);
+
         return type.typeName() + " " + localPseudoRegisters;
     }
 
@@ -281,29 +319,15 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override
     public String visitFloat(FloatContext ctx) {
+        // Unsure which standard the llvm ir code wants for its floats and doubles
+
         System.err.println("into float");
         long bits = Double.doubleToLongBits(Double.valueOf(ctx.number.getText()));
         String binary = Long.toBinaryString(bits);
         int decimal = Integer.parseInt(binary, 2);
         String returnString = Integer.toString(decimal, 16);
         returnString = "0x" + returnString;
-        
-        //String returnString = Integer.toString(Float.valueOf(ctx.number.getText()), 16);
-        //String returnString = String.valueOf(Float.floatToRawIntBits(Float.valueOf(ctx.number.getText())));
-        /*
-        String returnString = ctx.number.getText();
-        StringBuffer strBuf = new StringBuffer(returnString);
-        int i = returnString.indexOf(".");
-        System.err.println(i);
-        if (i != 1) {
-            strBuf.insert(1, ".");
-        }
-        System.err.println(i);
-        String end = "e+0"+(--i);
-        System.err.println(end);
-        strBuf.insert(strBuf.length(), end);
-        returnString = strBuf.toString();
-        */
+
 
         System.err.println(returnString);
         pseudoToTypeMap.put(returnString, compiler.Type.FLOAT);
@@ -316,18 +340,13 @@ public class MyVisitor extends StubBaseVisitor<String> {
         blockStack.push(block);
         block = "";
 
-        HashMap<String, Object>  oldMap = (HashMap<String, Object>) stubVarToPseudoMap.clone();
+        HashMap<String, VarWrapper>  oldMap = (HashMap<String, VarWrapper>) stubVarToPseudoMap.clone();
         stubVarToPseudoMap = new HashMap<>();
-        System.err.println("New Map before block before put all : "+stubVarToPseudoMap);
         stubVarToPseudoMap.putAll(oldMap);
-        System.err.println("New Map before block after put all : "+stubVarToPseudoMap);
 
-        String ret = visitChildren(ctx);
+        visitChildren(ctx);
 
-        System.err.println("Old Map After block should have b: "+stubVarToPseudoMap);
         stubVarToPseudoMap = oldMap;
-        System.err.println("Old Map After block: "+stubVarToPseudoMap);
-        System.err.println("Old Map After block: "+oldMap);
         
         String retBlock =  block;
         block = blockStack.pop();
@@ -396,8 +415,12 @@ public class MyVisitor extends StubBaseVisitor<String> {
                 return "i32";
             case "void":
                 return "void";
+            case "float[]":
+                return "float[]";
+            case "int[]":
+                return "i32[]";
             default:
-                return "";
+                throw new RuntimeException("<"+ctx.getText()+">"+"Type is not implemented yet");
         }
     }
 
@@ -405,7 +428,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
     public String visitVarDeclaration(VarDeclarationContext ctx) {
 
         String declarationVar = null;
-        Type declarationType = null;
+        TypeInterface declarationType = null;
         try {
             declarationVar = visit(ctx.expression);
             declarationType = pseudoToTypeMap.get(declarationVar);
@@ -416,13 +439,12 @@ public class MyVisitor extends StubBaseVisitor<String> {
             mutable = true;
 
         String id = ctx.identifier.getText();
-        Type type = Type.fromString(visit(ctx.varType));
+        TypeInterface type = Type.fromString(visit(ctx.varType));
 
-        String localPseudoRegisters = "%" + pseudoRegisters.peek();
-        pseudoRegisters.push(pseudoRegisters.pop() + 1);
+        String localPseudoRegisters = peekAndIncrease("", pseudoRegisters);
 
         pseudoToTypeMap.put(localPseudoRegisters, type);
-        stubVarToPseudoMap.put(id, (Object) new VarWrapper(localPseudoRegisters, type, mutable));
+        stubVarToPseudoMap.put(id, new VarWrapper(localPseudoRegisters, type, mutable));
         System.err.println("Put "+id+" into stubVarToPseudoMap, resulting in: "+stubVarToPseudoMap);
         //HashMap which maps varName to pseudoRegister but also rembers type, maybe create VarWrapper
         //Initalize a varibel through allocating and if declaration then store 
@@ -453,8 +475,8 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         String right = visit(ctx.right);
 
-        Type leftType = pseudoToTypeMap.get(left);
-        Type rightType = pseudoToTypeMap.get(right);
+        TypeInterface leftType = pseudoToTypeMap.get(left);
+        TypeInterface rightType = pseudoToTypeMap.get(right);
 
         System.err.println("EQUALS: " + leftType.name() + " || " + rightType.name());
         if (!leftType.name().equals(rightType.name())) {
@@ -518,8 +540,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
         String localPseudoRegisters = "";
 
         if (fn.getRetType() != Type.VOID) {
-            localPseudoRegisters = "%" + pseudoRegisters.peek();
-            pseudoRegisters.push(pseudoRegisters.pop() + 1);
+            localPseudoRegisters = peekAndIncrease("", pseudoRegisters);
             pseudoToTypeMap.put(localPseudoRegisters, fn.getRetType());
 
             functionCall = localPseudoRegisters + " = " + functionCall;
@@ -542,7 +563,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
            String variable = visit(ctx.getChild(i)); 
            // get variable from return, if it is in 
 
-           Type type;
+           TypeInterface type;
            try { 
                type = pseudoToTypeMap.get(variable);
            } catch (NullPointerException e) {
@@ -553,8 +574,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
            if (printf && type == Type.FLOAT) {
                 String oldVariable = variable;
 
-                variable = "%" + pseudoRegisters.peek();
-                pseudoRegisters.push(pseudoRegisters.pop() + 1);
+                variable = peekAndIncrease("", pseudoRegisters);
 
                 block += variable + " = fpext float" + 
                     oldVariable + " to double\n";
@@ -564,9 +584,9 @@ public class MyVisitor extends StubBaseVisitor<String> {
            }
 
            // special case when println returns getpointer
+           currentCalledFunction.addParameter(new Pair<TypeInterface, String>(type, ""));
            if (type != null) {
                expressionList += type.typeName() + " " + variable;
-               currentCalledFunction.addParameter(new Pair<Type, String>(type, ""));
            } else {
                expressionList += variable;
            }
@@ -586,24 +606,19 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
         // TODO load from the pseudo pointer to a new pseudo and return this one
          
-        VarWrapper varWrapper = (VarWrapper) stubVarToPseudoMap.get(variable);
+        VarWrapper varWrapper = stubVarToPseudoMap.get(variable);
         if (varWrapper == null) {
             throw new UndeclaredVariableException(ctx.id);
         }
         String pointerPseudo = varWrapper.getPseudo();
-        Type type = varWrapper.getType();
+        TypeInterface type = varWrapper.getType();
         //Type type = pseudoToTypeMap.get(pointerPseudo);
 
 
         // Check if the parent node in the tree will want a pointer or the real value
         if (ctx.getParent().getClass() != AssignExprContext.class || !assignmentLeft) {
 
-            // if variable comes from formal parameters of a function declaration
-            if (pointerPseudo.contains("tmp"))
-                    return pointerPseudo;
-
-            String localPseudoRegisters = "%" + pseudoRegisters.peek();
-            pseudoRegisters.push(pseudoRegisters.pop() + 1);
+            String localPseudoRegisters = peekAndIncrease("", pseudoRegisters);
 
             pseudoToTypeMap.put(localPseudoRegisters, type);
 
@@ -622,7 +637,7 @@ public class MyVisitor extends StubBaseVisitor<String> {
     @Override
     public String visitIfElse(IfElseContext ctx) {
         String exprPseudo = visit(ctx.expression);
-        Type type = pseudoToTypeMap.get(exprPseudo);
+        TypeInterface type = pseudoToTypeMap.get(exprPseudo);
         Pair<String, String> returnPair = Type.trunc(exprPseudo, type, Type.INT1,
                                   pseudoRegisters, block);
         block = returnPair.getValue();
@@ -684,23 +699,23 @@ public class MyVisitor extends StubBaseVisitor<String> {
 
     @Override 
     public String visitArrayDeclaration(ArrayDeclarationContext ctx) {
-        Type type = Type.fromString(visit(ctx.varType));
+        ArrayType type = (ArrayType) ArrayType.fromString(visit(ctx.varType));
         String identifier = ctx.identifier.getText();
         int count = Integer.valueOf(ctx.count.getText());
+        type.setCount(count);
 
         boolean mutable = false;
         if (ctx.mutable != null)
             mutable = true;
 
-        String localPseudoRegisters = "%array" + arrayPseudoRegisters.peek();
-        arrayPseudoRegisters.push(arrayPseudoRegisters.pop() + 1);
+        String localPseudoRegisters = peekAndIncrease("array", arrayPseudoRegisters);
         pseudoToTypeMap.put(localPseudoRegisters, type);
 
         stubVarToPseudoMap.put(identifier,
-                (Object) new ArrayWrapper(localPseudoRegisters, count, mutable, type));
+                new ArrayWrapper(localPseudoRegisters, count, mutable, type));
 
-        block += localPseudoRegisters+" = alloca ["+
-            count+" x "+type.typeName()+"]\n";
+        block += localPseudoRegisters+" = alloca "+
+            type.typeName()+"\n";
 
         return localPseudoRegisters;
     }
@@ -710,36 +725,46 @@ public class MyVisitor extends StubBaseVisitor<String> {
         String index = visit(ctx.index);
         String arrayIdentifier = ctx.array.getText();
 
-        ArrayWrapper stubVar;
+        VarWrapper stubVar =  stubVarToPseudoMap.get(arrayIdentifier);
+        TypeInterface typeIndex = stubVar.getType();
+        if (!typeIndex.isArray()) {
+            throw new ValueIsNoArrayException(ctx.array.start);
+        }
+
+
+        /*
         try {
             stubVar = (ArrayWrapper) stubVarToPseudoMap.get(arrayIdentifier);
         } catch (ClassCastException e) {
-            throw new ValueIsNoArrayException(ctx.array.start);
         } catch (Exception e) {
             throw e;
         }
+        */
 
         String pseudoName = stubVar.getPseudo();
-        Type type = stubVar.getType();
-        int count = stubVar.getCount();
+        ArrayType arrayType = (ArrayType) stubVar.getType();
 
+        int count = arrayType.getCount();
+        if (Integer.valueOf(index) >= count && count != 0) {
+            throw new ArrayOutOfBoundsException(ctx.index.start);
+        }
 
         String localPseudoRegisters = "%array" + arrayPseudoRegisters.peek();
         arrayPseudoRegisters.push(arrayPseudoRegisters.pop() + 1);
-        pseudoToTypeMap.put(localPseudoRegisters, type);
+
+        TypeInterface type = Type.fromString(arrayType.internalTypeName());
         
-        block += localPseudoRegisters+" = getelementptr ["+count+" x "+
-            type.typeName()+"], ["+count+" x "+type.typeName()+"]* "+
+        block += localPseudoRegisters+" = getelementptr "+
+            arrayType.typeName()+", "+arrayType.typeName()+"* "+
             pseudoName+", i64 0, i64 "+index+"\n";    
 
         if (ctx.getParent().getClass() != AssignExprContext.class) {
             // if variable comes from formal parameters of a function declaration
             // TODO check if arrays in functionDeclaration work
-            if (pseudoName.contains("tmp"))
-                    return pseudoName;
+            //if (pseudoName.contains("tmp"))
+            //      return pseudoName;
 
-            String newlocalPseudoRegisters = "%" + pseudoRegisters.peek();
-            pseudoRegisters.push(pseudoRegisters.pop() + 1);
+            String newlocalPseudoRegisters = peekAndIncrease("", pseudoRegisters);
 
             pseudoToTypeMap.put(newlocalPseudoRegisters, type);
 
@@ -752,6 +777,8 @@ public class MyVisitor extends StubBaseVisitor<String> {
         if (!stubVar.getMutable() && assignmentLeft)
             throw new NotMutableException(ctx.array.start);
 
+        pseudoToTypeMap.put(localPseudoRegisters, type);
+        System.err.println(type);
         return localPseudoRegisters; 
     }
 
@@ -764,5 +791,15 @@ public class MyVisitor extends StubBaseVisitor<String> {
             return aggregate;
         }
         return aggregate + "\n" + nextResult;
+    }
+
+    /**
+     * Helper function to generate a pseudoRegister String 
+     * while increasing the number in the Stack
+     * */
+    protected String peekAndIncrease(String pseudoPart, Stack<Integer> stack) {
+        String localPseudoRegisters = "%" + pseudoPart + stack.peek();
+        stack.push(stack.pop() + 1);
+        return localPseudoRegisters;
     }
 }

@@ -2,10 +2,10 @@ package compiler;
 
 public class VarWrapper {
     String pseudoRegister;
-    Type type;
+    TypeInterface type;
     boolean mutable;
 
-    public VarWrapper(String pseudoRegister, Type type, boolean mutable) {
+    public VarWrapper(String pseudoRegister, TypeInterface type, boolean mutable) {
         this.pseudoRegister = pseudoRegister; 
         this.type = type;
         this.mutable = mutable;
@@ -19,11 +19,11 @@ public class VarWrapper {
         this.pseudoRegister =  pseudoRegister;
     }
 
-    public Type getType() {
+    public TypeInterface getType() {
         return this.type; 
     }
 
-    public void setType(Type type) {
+    public void setType(TypeInterface type) {
         this.type = type;
     }
 

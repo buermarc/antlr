@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileWriter;
 
 import java.util.List;
+import java.util.HashMap;
 
 import org.parser.StubLexer;
 import org.parser.StubParser;
@@ -76,8 +77,9 @@ public class Main {
 
         String staticDefinitions =  functionVisitor.getStaticDefinitions();
         List<Function> functionList = functionVisitor.getFunctionList();
+        HashMap<String, ArrayType> arrayTypeMap = functionVisitor.getArrayMap();
 
-        MyVisitor myVisitor = new MyVisitor(staticDefinitions, functionList);
+        MyVisitor myVisitor = new MyVisitor(staticDefinitions, functionList, arrayTypeMap);
         return myVisitor.visit(tree);
     }
 
