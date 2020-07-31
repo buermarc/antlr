@@ -33,7 +33,6 @@ Bootstraping the project:
     archlinux           latest              ------------        ------------         415MB
 
 
-
 Dependencies:
     gradle
     clang
